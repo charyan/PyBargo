@@ -40,7 +40,7 @@ if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
           "    clean         Delete all .o files in build dir, debug and release executables\n"
           "    config        Show pb config (defined in pb.toml)\n"
           "    help          Show this message\n")
-    exit(1)
+    exit(0)
 
 
 if sys.argv[1] == "init":
