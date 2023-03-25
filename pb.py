@@ -24,8 +24,10 @@ if not (sys.version_info[0] == 3 and sys.version_info[1] >= 11):
 
 import tomllib
 
-if len(sys.argv) == 1:
-    print("pb: missing file operand\nTry 'pb help' for more information")
+if len(sys.argv) < 2 or (sys.argv[1] not in ["build", "release-build", "run",
+                                             "release-run", "init", "clean",
+                                             "config", "help"]):
+    print("pb: missing command operand\nTry 'pb help' for more information")
     exit(1)
 
 if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
@@ -34,7 +36,7 @@ if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
           "    release-build Compile the app in release mode\n"
           "    run           Compile and run the app in debug mode\n"
           "    release-run   Compile and run the app in release mode\n"
-          "    init          Create default pb.toml config\n"
+          "    init [name]   Create project structure\n"
           "    clean         Delete all .o files, debug and release executables\n"
           "    config        Show pb config (defined in pb.toml)\n"
           "    help          Show this message\n")
@@ -42,20 +44,42 @@ if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
 
 
 if sys.argv[1] == "init":
-    fo = open("pb.toml", "w+")
-    fo.write('''
+    if len(sys.argv) < 3:
+        print("Error: No project name given.\nUsage: pb init <project name>")
+        exit(1)
+    os.mkdir("{}".format(sys.argv[2]))
+    fo = open("{}/pb.toml".format(sys.argv[2]), "w+")
+    fo.write('''[package]
+name = "{}"
+package_version = "0.1.0"
+pybargo_version = "0.1"
+
 [compiler]
 CC = "clang++"
 CPP_FLAGS = "-fexperimental-library -std=c++20 -stdlib=libc++ -Wall -Wextra -pedantic"
 DEBUG_BUILD_FLAGS = "-g -Og"
 RELEASE_BUILD_FLAGS="-O2 -s"
-RELEASE_OUTPUT_FILENAME="./release-app"
-DEBUG_OUTPUT_FILENAME="./debug-app"
+RELEASE_OUTPUT_FILENAME="release-app"
+DEBUG_OUTPUT_FILENAME="debug-app"
 
 [debugger]
 DBG="lldb"
 DEBUGGER_RUN_FLAGS="--source-quietly -o run -o exit --"
-    ''')
+    '''.format(sys.argv[2]))
+    fo.close()
+    os.mkdir("{}/src".format(sys.argv[2]))
+    os.mkdir("{}/src/{}".format(sys.argv[2], sys.argv[2]))
+    os.mkdir("{}/include".format(sys.argv[2]))
+    os.mkdir("{}/include/{}".format(sys.argv[2], sys.argv[2]))
+    fo = open("{}/src/main.cpp".format(sys.argv[2]), "w+")
+    fo.write('''
+#include <iostream>
+
+int main() {
+    std::cout << "Hello World !" << std::endl;
+    return 0;
+}
+        ''')
     fo.close()
     exit(0)
 
@@ -77,9 +101,11 @@ except FileNotFoundError:
     exit(1)
 
 if sys.argv[1] == "clean":
-    rm_files = glob.glob("**/*.o", recursive=True)
-    rm_files += (glob.glob("{}".format(data['compiler']['RELEASE_OUTPUT_FILENAME'])))
-    rm_files += (glob.glob("{}".format(data['compiler']['DEBUG_OUTPUT_FILENAME'])))
+    rm_files = glob.glob("build/**/*.o", recursive=True)
+    rm_files += (glob.glob("build/{}".format(data['compiler']
+                 ['RELEASE_OUTPUT_FILENAME'])))
+    rm_files += (glob.glob("build/{}".format(data['compiler']
+                 ['DEBUG_OUTPUT_FILENAME'])))
     if len(rm_files) > 0:
         print("Files to remove:")
         for f in rm_files:
@@ -89,6 +115,7 @@ if sys.argv[1] == "clean":
             for f in rm_files:
                 os.remove(f)
                 print("{} deleted".format(f))
+            os.rmdir("build")
             print("\nFinished. Quitting")
         else:
             print("No files deleted. Quitting.")
@@ -96,25 +123,31 @@ if sys.argv[1] == "clean":
         print("No files to delete. Quitting")
     exit(0)
 
-cpp_files = glob.glob("**/*.cpp", recursive=True)
+cpp_files = glob.glob("src/**/*.cpp", recursive=True)
 file_str = ' '.join(cpp_files)
 
-cmd = "{} {} {} -o".format(data['compiler']['CC'], data['compiler']['CPP_FLAGS'],
-                           file_str)
-cmd_release = cmd + " {} {}".format(data['compiler']['RELEASE_OUTPUT_FILENAME'],
-                                    data['compiler']['RELEASE_BUILD_FLAGS'])
-cmd_debug = cmd + " {} {}".format(data['compiler']['DEBUG_OUTPUT_FILENAME'],
-                                  data['compiler']['DEBUG_BUILD_FLAGS'])
+cmd = "{} {} {} -o build/".format(data['compiler']['CC'],
+                                  data['compiler']['CPP_FLAGS'],
+                                  file_str)
+cmd_release = cmd + "{} {}".format(data['compiler']['RELEASE_OUTPUT_FILENAME'],
+                                   data['compiler']['RELEASE_BUILD_FLAGS'])
+cmd_debug = cmd + "{} {}".format(data['compiler']['DEBUG_OUTPUT_FILENAME'],
+                                 data['compiler']['DEBUG_BUILD_FLAGS'])
+try:
+    os.mkdir("build")
+except FileExistsError:
+    pass
 
 if sys.argv[1] == "build" or sys.argv[1] == "run":
     if os.system(cmd_debug) != 0:
         exit(1)
     if sys.argv[1] == "run":
-        exit(os.system("{} {} {}".format(data['debugger']['DBG'],
-                                         data['debugger']['DEBUGGER_RUN_FLAGS'],
-                                         data['compiler']['DEBUG_OUTPUT_FILENAME'])))
+        exit(os.system("{} {} build/{}".format(data['debugger']['DBG'],
+                                               data['debugger']['DEBUGGER_RUN_FLAGS'],
+                                               data['compiler']['DEBUG_OUTPUT_FILENAME'])))
 elif sys.argv[1] == "release-build" or sys.argv[1] == "release-run":
     if os.system(cmd_release) != 0:
         exit(1)
     if sys.argv[1] == "release-run":
-        exit(os.system("{}".format(data['compiler']['RELEASE_OUTPUT_FILENAME'])))
+        exit(os.system("build/{}".format(
+            data['compiler']['RELEASE_OUTPUT_FILENAME'])))
