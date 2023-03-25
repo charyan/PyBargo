@@ -100,6 +100,20 @@ except FileNotFoundError:
     print("No pb.toml in current directory. Quitting.")
     exit(1)
 
+
+def rmBuildDir():
+    print("Removing build directory.")
+    try:
+        os.rmdir("build")
+        print("build directory removed.")
+    except OSError as e:
+        if e.errno == 39:
+            print("build directory not empty.")
+        else:
+            print(e)
+            exit(1)
+
+
 if sys.argv[1] == "clean":
     rm_files = glob.glob("build/**/*.o", recursive=True)
     rm_files += (glob.glob("build/{}".format(data['compiler']
@@ -115,12 +129,13 @@ if sys.argv[1] == "clean":
             for f in rm_files:
                 os.remove(f)
                 print("{} deleted".format(f))
-            os.rmdir("build")
+            rmBuildDir()
             print("\nFinished. Quitting")
         else:
             print("No files deleted. Quitting.")
     else:
-        print("No files to delete. Quitting")
+        print("No files to delete.")
+        rmBuildDir()
     exit(0)
 
 cpp_files = glob.glob("src/**/*.cpp", recursive=True)
