@@ -37,7 +37,7 @@ if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
           "    run           Compile and run the app in debug mode\n"
           "    release-run   Compile and run the app in release mode\n"
           "    init [name]   Create project structure\n"
-          "    clean         Delete all .o files, debug and release executables\n"
+          "    clean         Delete all .o files in build dir, debug and release executables\n"
           "    config        Show pb config (defined in pb.toml)\n"
           "    help          Show this message\n")
     exit(1)
