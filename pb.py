@@ -26,7 +26,7 @@ import tomllib
 
 if len(sys.argv) < 2 or (sys.argv[1] not in ["build", "release-build", "run",
                                              "release-run", "init", "clean",
-                                             "config", "help"]):
+                                             "config", "help", "flags"]):
     print("pb: missing command operand\nTry 'pb help' for more information")
     exit(1)
 
@@ -39,6 +39,7 @@ if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
           "    init [name]   Create project structure\n"
           "    clean         Delete all .o files in build dir, debug and release executables\n"
           "    config        Show pb config (defined in pb.toml)\n"
+          "    flags         Generate a compile_flags.txt file containing CPP_FLAGS\n"
           "    help          Show this message\n")
     exit(0)
 
@@ -99,6 +100,15 @@ try:
 except FileNotFoundError:
     print("No pb.toml in current directory. Quitting.")
     exit(1)
+
+if sys.argv[1] == "flags":
+    with open("compile_flags.txt", "w") as f:
+        output_string = ''
+        for flag in data['compiler']['CPP_FLAGS'].split():
+            output_string += flag + '\n'
+        f.write(output_string)
+        f.close()
+        exit(0)
 
 
 def rmBuildDir():
