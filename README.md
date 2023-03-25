@@ -12,5 +12,6 @@ Usage: pb [COMMAND]
     init [name]   Create project structure
     clean         Delete all .o files in build dir, debug and release executables
     config        Show pb config (defined in pb.toml)
+    flags         Generate a compile_flags.txt file containing CPP_FLAGS
     help          Show this message
 ```
