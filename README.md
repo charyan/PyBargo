@@ -15,3 +15,6 @@ Usage: pb [COMMAND]
     flags         Generate a compile_flags.txt file containing CPP_FLAGS
     help          Show this message
 ```
+
+## Similar projects
+[Embargo](https://github.com/Valchap/embargo)
