@@ -57,7 +57,8 @@ pybargo_version = "0.1"
 
 [compiler]
 CC = "clang++"
-CPP_FLAGS = "-fexperimental-library -std=c++20 -stdlib=libc++ -Wall -Wextra -pedantic"
+CPP_FLAGS = "-fexperimental-library -std=c++20 -stdlib=libc++ -Wall -Wextra \
+-pedantic -Iinclude"
 DEBUG_BUILD_FLAGS = "-g -Og"
 RELEASE_BUILD_FLAGS="-O2 -s"
 RELEASE_OUTPUT_FILENAME="release-app"
