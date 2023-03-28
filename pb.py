@@ -26,18 +26,20 @@ import tomllib
 
 if len(sys.argv) < 2 or (sys.argv[1] not in ["build", "release-build", "run",
                                              "release-run", "init", "clean",
-                                             "config", "help", "flags"]):
+                                             "config", "help", "flags",
+                                             "debug"]):
     print("pb: missing command operand\nTry 'pb help' for more information")
     exit(1)
 
 if sys.argv[1] == "--help" or sys.argv[1] == "help" or sys.argv[1] == "-h":
     print("\nUsage: pb [COMMAND]\n\n"
-          "    build         Compile the current app in debug mode\n"
-          "    release-build Compile the app in release mode\n"
-          "    run           Compile and run the app in debug mode\n"
-          "    release-run   Compile and run the app in release mode\n"
+          "    build         Build the current app in debug mode\n"
+          "    release-build Build the app in release mode\n"
+          "    run           Build and run the app in debug mode\n"
+          "    release-run   Build and run the app in release mode\n"
+          "    debug         Build the app in debug mode and open in debugger\n"
           "    init [name]   Create project structure\n"
-          "    clean         Delete all .o files in build dir, debug and release executables\n"
+          "    clean         Delete all .o files in build dir and executables\n"
           "    config        Show pb config (defined in pb.toml)\n"
           "    flags         Generate a compile_flags.txt file containing CPP_FLAGS\n"
           "    help          Show this message\n")
@@ -164,13 +166,16 @@ try:
 except FileExistsError:
     pass
 
-if sys.argv[1] == "build" or sys.argv[1] == "run":
+if sys.argv[1] in ["build", "run", "debug"]:
     if os.system(cmd_debug) != 0:
         exit(1)
     if sys.argv[1] == "run":
         exit(os.system("{} {} build/{}".format(data['debugger']['DBG'],
                                                data['debugger']['DEBUGGER_RUN_FLAGS'],
                                                data['compiler']['DEBUG_OUTPUT_FILENAME'])))
+    elif sys.argv[1] == "debug":
+        exit(os.system("{} build/{}".format(data['debugger']['DBG'],
+                                            data['compiler']['DEBUG_OUTPUT_FILENAME'])))
 elif sys.argv[1] == "release-build" or sys.argv[1] == "release-run":
     if os.system(cmd_release) != 0:
         exit(1)
